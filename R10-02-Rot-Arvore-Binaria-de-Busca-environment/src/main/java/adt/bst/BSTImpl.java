@@ -80,7 +80,7 @@ public class BSTImpl<T extends Comparable<T>> implements BST<T> {
 			return maximum(aux);
 		
 		else
-			return aux;
+			return null;
 	}
 	
 	private BSTNode<T> maximum(BSTNode<T> node) {
@@ -98,7 +98,7 @@ public class BSTImpl<T extends Comparable<T>> implements BST<T> {
 			return minimum(aux);
 		
 		else
-			return aux;
+			return null;
 	}
 	
 	private BSTNode<T> minimum(BSTNode<T> node) {
@@ -124,7 +124,7 @@ public class BSTImpl<T extends Comparable<T>> implements BST<T> {
 			BSTNode<T> aux = node;
 			BSTNode<T> auxParent = (BSTNode<T>) node.getParent();
 			
-			while (!auxParent.isEmpty() || auxParent.getData() != null) {
+			while (!auxParent.isEmpty() && aux.equals(auxParent.getRight())) {
 				aux = auxParent;
 				auxParent = (BSTNode<T>) auxParent.getParent();
 			}
@@ -138,31 +138,151 @@ public class BSTImpl<T extends Comparable<T>> implements BST<T> {
 
 	@Override
 	public BSTNode<T> predecessor(T element) { //first least
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("Not implemented yet!");
+		BSTNode<T> node = search(element);
+		
+		if (node.isEmpty())
+			return null;
+		
+		//has a left subtree
+		else if (!node.getLeft().isEmpty())
+			return minimum((BSTNode<T>) node.getLeft());
+		
+		
+		//doesn't have a left subtree
+		else {
+			BSTNode<T> aux = node;
+			BSTNode<T> auxParent = (BSTNode<T>) node.getParent();
+			
+			while (!auxParent.isEmpty() && aux.equals(auxParent.getLeft())) {
+				aux = auxParent;
+				auxParent = (BSTNode<T>) auxParent.getParent();
+			}
+			
+			return auxParent;
+		}
 	}
 
 	@Override
 	public void remove(T element) { //base case is to remove a leaf
-		//TODO
+		BSTNode<T> node = search(element);
+		
+		if (!node.isEmpty() && node != null) {
+			if (!node.getLeft().isEmpty() && !node.getRight().isEmpty())
+				removeHasTwoChildren(node);
+			
+			else if (node.isLeaf())
+				removeIsLeaf(node);
+			
+			else
+				removeHasOneChild(node);
+		}
+	}
+	
+	private void removeIsLeaf(BSTNode<T> node) {
+		node.setData(null);
+	}
+	
+	private void removeHasOneChild(BSTNode<T> node) {
+		BSTNode<T> aux;
+		
+		if (hasOnlyLeftSon(node)) {
+			aux = (BSTNode<T>) node.getLeft();
+		} else {
+			aux = (BSTNode<T>) node.getRight();
+		}
+		
+		if (node.getParent() == null) {
+			aux.setParent(null);
+			this.root = aux;
+		}
+		
+		else {
+			if (isLeftSon(node)) {
+				node.getParent().setLeft(aux);
+			} else {
+				node.getParent().setRight(aux);
+			}
+			
+			aux.setParent(node.getParent());
+		}
+	}
+	
+	private void removeHasTwoChildren(BSTNode<T> node) {
+		BSTNode<T> minRight = minimum((BSTNode<T>) node.getRight());
+		
+		T aux = node.getData();
+		
+		node.setData(minRight.getData());
+		minRight.setData(aux);
+		
+		remove(aux);
+	}
+	
+	private boolean isLeftSon(BSTNode<T> node) {
+		return !node.getParent().isEmpty() && !node.getParent().getLeft().isEmpty()
+				&& node.getParent().getLeft().equals(node);
+	}
+	
+	private boolean hasOnlyLeftSon(BSTNode<T> node) {
+		return (node.getRight().isEmpty() && !node.getLeft().isEmpty());
 	}
 
 	@Override
-	public T[] preOrder() {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("Not implemented yet!");
+	public T[] preOrder() { //root, left, right
+		T[] array = (T[]) new Comparable[size()];
+		preOrder(array, 0, this.root);
+		
+		return array;
+	}
+	
+	private int preOrder(T[] array, int index, BSTNode<T> node) {
+		if (!node.isEmpty()) {
+			array[index++] = node.getData();
+			
+			index = preOrder(array, index, (BSTNode<T>) node.getLeft());
+			index = preOrder(array, index, (BSTNode<T>) node.getRight());
+		}
+		
+		return index;
 	}
 
 	@Override
-	public T[] order() {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("Not implemented yet!");
+	public T[] order() { //left, root, right
+		T[] array = (T[]) new Comparable[size()];
+		order(array, 0, this.root);
+		
+		return array;
+	}
+	
+	private int order(T[] array, int index, BSTNode<T> node) {
+		if (!node.isEmpty()) {
+			index = order(array, index, (BSTNode<T>) node.getLeft());
+			
+			array[index++] = node.getData();
+			
+			index = order(array, index, (BSTNode<T>) node.getRight());
+		}
+		
+		return index;
 	}
 
 	@Override
-	public T[] postOrder() {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("Not implemented yet!");
+	public T[] postOrder() { //left, right, root
+		T[] array = (T[]) new Comparable[size()];
+		postOrder(array, 0, this.root);
+		
+		return array;
+	}
+	
+	private int postOrder(T[] array, int index, BSTNode<T> node) {
+		if (!node.isEmpty()) {
+			index = postOrder(array, index, (BSTNode<T>) node.getLeft());
+			index = postOrder(array, index, (BSTNode<T>) node.getRight());
+			
+			array[index++] = node.getData();
+		}
+		
+		return index;
 	}
 
 	/**
